@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Website Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: #020617;
+        color: #e5e7eb;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #1e293b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      header span {
+        font-size: 0.8rem;
+        color: #9ca3af;
+      }
+
+      main {
+        flex: 1;
+        padding: 1rem 1.5rem 1.5rem;
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
+        gap: 1rem;
+      }
+
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: #020617;
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid #1f2937;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      }
+
+      .card h2 {
+        margin-top: 0;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9ca3af;
+      }
+
+      label {
+        display: block;
+        font-size: 0.8rem;
+        color: #9ca3af;
+        margin-bottom: 0.25rem;
+      }
+
+      textarea {
+        width: 100%;
+        border-radius: 0.75rem;
+        border: 1px solid #374151;
+        background: #020617;
+        color: #e5e7eb;
+        padding: 0.5rem 0.7rem;
+        resize: vertical;
+        min-height: 120px;
+        font-size: 0.9rem;
+        font-family: inherit;
+      }
+
+      #generatedCode {
+        height: 100%;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 0.75rem;
+      }
+
+      button {
+        margin-top: 0.5rem;
+        border: none;
+        border-radius: 999px;
+        padding: 0.55rem 1.2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #4f46e5;
+        color: white;
+      }
+
+      button:hover {
+        filter: brightness(1.08);
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .status {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #9ca3af;
+      }
+
+      .status.error {
+        color: #fca5a5;
+      }
+
+      .output-layout {
+        display: grid;
+        grid-template-rows: 2fr 1.4fr;
+        gap: 0.75rem;
+        height: 100%;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border-radius: 0.75rem;
+        border: 1px solid #111827;
+        background: white;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>AI Website Generator</h1>
+      <span>Write a description → AI generates a full website inside.</span>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Prompt</h2>
+        <label for="prompt">
+          Describe the website you want (style, sections, colors, vibe…)
+        </label>
+        <textarea
+          id="prompt"
+          placeholder="Example: Dark cyberpunk landing page for my indie game with hero section, features, and a newsletter signup."
+        ></textarea>
+        <button id="generateBtn" type="button">
+          ⚙️ Generate with AI
+        </button>
+        <div id="status" class="status"></div>
+      </section>
+
+      <section class="card">
+        <h2>Preview & Code</h2>
+        <div class="output-layout">
+          <iframe id="preview"></iframe>
+          <textarea
+            id="generatedCode"
+            readonly
+            placeholder="Generated HTML will appear here..."
+          ></textarea>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const promptEl = document.getElementById("prompt");
+      const generateBtn = document.getElementById("generateBtn");
+      const statusEl = document.getElementById("status");
+      const iframe = document.getElementById("preview");
+      const codeArea = document.getElementById("generatedCode");
+
+      async function generateSite() {
+        const prompt = promptEl.value.trim();
+
+        if (!prompt) {
+          statusEl.textContent = "Please write a description first.";
+          statusEl.classList.remove("error");
+          return;
+        }
+
+        statusEl.textContent = "Generating website with AI...";
+        statusEl.classList.remove("error");
+        generateBtn.disabled = true;
+
+        try {
+          const res = await fetch("/api/generate-site", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ prompt }),
+          });
+
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Request failed");
+          }
+
+          const data = await res.json();
+          const html = data.html || "";
+
+          // Update iframe
+          const doc = iframe.contentDocument || iframe.contentWindow.document;
+          doc.open();
+          doc.write(html);
+          doc.close();
+
+          // Update code textarea
+          codeArea.value = html;
+          statusEl.textContent = "Done. You can copy the HTML below.";
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent =
+            "Error generating site: " + (err.message || "Unknown error");
+          statusEl.classList.add("error");
+        } finally {
+          generateBtn.disabled = false;
+        }
+      }
+
+      generateBtn.addEventListener("click", generateSite);
+    </script>
+  </body>
+</html>
