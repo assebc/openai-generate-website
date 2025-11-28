@@ -4,14 +4,26 @@ import {
   createProjectWithLimit,
   updateProjectCode,
   savePrompt,
+  getPromptHistoryForProject,
 } from "./projectService.js";
 
-export async function generateForProject({ userId, projectId, projectName, prompt }) {
+export async function generateForProject({
+  userId,
+  projectId,
+  projectName,
+  prompt,
+}) {
   // ensure user exists
   getUserOrThrow(userId);
 
-  // Call LLM
-  const raw = await generatePage(prompt);
+  // 🔹 Load prompt history for this project (if any) and pass it to the LLM
+  let history = [];
+  if (projectId) {
+    history = getPromptHistoryForProject(projectId); // returns [{ id, prompt, created_at }, ...]
+  }
+
+  // Call LLM with current prompt + history
+  const raw = await generatePage(prompt, history);
 
   let parsed;
   try {

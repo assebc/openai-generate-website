@@ -59,3 +59,7 @@ export function deleteProject({ userId, projectId }) {
 export function savePrompt({ projectId, prompt }) {
   insertPrompt({ projectId, prompt });
 }
+
+export function getPromptHistoryForProject(projectId) {
+  return getPromptsForProject(projectId);
+}
