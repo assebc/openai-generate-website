@@ -16,7 +16,7 @@ const router = express.Router();
  */
 router.post("/generate-page", async (req, res) => {
   try {
-    const { userId, projectId, projectName, prompt } = req.body;
+    const { userId, projectId, prompt } = req.body;
 
     if (typeof prompt !== "string" || !prompt.trim()) {
       return res
@@ -46,7 +46,6 @@ router.post("/generate-page", async (req, res) => {
       result = await generateForProject({
         userId: numericUserId,
         projectId: numericProjectId,
-        projectName,
         prompt,
       });
     } catch (err) {

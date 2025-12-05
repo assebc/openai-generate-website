@@ -10,7 +10,6 @@ import {
 export async function generateForProject({
   userId,
   projectId,
-  projectName,
   prompt,
 }) {
   // ensure user exists
