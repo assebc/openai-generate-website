@@ -11,6 +11,10 @@ export const swaggerSpec = {
       url: "http://localhost:3000",
       description: "Local dev server",
     },
+    {
+      url: "https://our-brand-api.vercel.app",
+      description: "Prod server"
+    },
   ],
   components: {
     schemas: {
